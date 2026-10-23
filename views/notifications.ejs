@@ -1,0 +1,16 @@
+<%- include('partials/head', { title }) %>
+<section class="panel">
+  <div class="row"><h1>Notifications</h1>
+    <% if (items.some(function (n) { return !n.is_read; })) { %>
+    <form class="inline" method="POST" action="/notifications/read-all"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" type="submit">Mark all as read</button></form>
+    <% } %>
+  </div>
+  <% if (!items.length) { %><p class="empty">Nothing yet. You will be notified here when something needs your attention.</p><% } %>
+  <% items.forEach(function (n) { %>
+    <a class="notif <%= n.is_read ? '' : 'unread' %>" href="/notifications/<%= n.id %>/open">
+      <b><%= n.title %></b><% if (n.reference_no) { %> <small class="muted">· <%= n.reference_no %></small><% } %><% if (!n.is_read) { %> <span class="badge b-requested">New</span><% } %><br>
+      <span><%= n.body %></span><br><small class="muted"><%= fmt(n.created_at) %></small>
+    </a>
+  <% }); %>
+</section>
+<%- include('partials/foot') %>

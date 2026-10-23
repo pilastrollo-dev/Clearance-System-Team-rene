@@ -1,0 +1,55 @@
+<%- include('../partials/head', { title }) %>
+<%
+  var rules = [{ key: 'len', label: 'At least 8 characters' }, { key: 'upper', label: 'One uppercase letter' }, { key: 'lower', label: 'One lowercase letter' }, { key: 'num', label: 'One number' }, { key: 'special', label: 'One special character (e.g. @ # ! $)' }];
+  var fieldKeys = Object.keys(errors);
+  var self = mode === 'edit' && userId === user.id;
+%>
+<section class="panel">
+  <p><a href="/admin/users">&larr; Back to users</a></p>
+  <h1><%= mode === 'new' ? 'Add a user' : 'Edit user' %></h1>
+  <% if (fieldKeys.length) { %><div class="errors" role="alert"><p><b>Nothing was saved.</b> Fix the highlighted <%= fieldKeys.length === 1 ? 'field' : fieldKeys.length + ' fields' %>. Everything else you typed is still here (passwords are never refilled).</p></div><% } %>
+  <form method="POST" action="<%= mode === 'new' ? '/admin/users' : '/admin/users/' + userId %>" novalidate <%- mode === 'new' ? 'data-draft="user-form" data-fresh="' + (fieldKeys.length ? '0' : '1') + '"' : '' %>>
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <div class="cols">
+      <%- include('../partials/select', { name: 'role', label: 'Role', value: old.role, E: errors, required: true, blank: 'Choose…', attrs: self ? 'disabled' : '', options: roles.map(function (r) { return { value: r, label: r === 'staff' ? 'office staff / registrar / dean / dept. head' : r }; }) }) %>
+      <% if (self) { %><input type="hidden" name="role" value="<%= old.role %>"><% } %>
+      <%- include('../partials/input', { name: 'given_name', label: 'First name', value: old.given_name, E: errors, required: true, maxlength: 80, autocomplete: 'off' }) %>
+      <%- include('../partials/input', { name: 'middle_name', label: 'Middle name (optional)', value: old.middle_name, E: errors, maxlength: 80, autocomplete: 'off' }) %>
+      <%- include('../partials/input', { name: 'family_name', label: 'Surname', value: old.family_name, E: errors, required: true, maxlength: 80, autocomplete: 'off' }) %>
+    </div>
+
+    <%- include('../partials/input', { name: 'email', label: 'Institutional email', type: 'email', value: old.email, E: errors, maxlength: 120, autocomplete: 'off', hint: 'Suggested automatically from the name (students: first 2 letters of first name + surname; others: full name). A generated address is not proof that the mailbox exists.' }) %>
+    <% if (suggestions.length) { %><div class="suggest">Available alternatives: <% suggestions.forEach(function (s) { %><button type="button" class="btn btn-ghost btn-sm" data-suggest="<%= s %>"><%= s %></button><% }); %></div><% } %>
+    <% if (mode === 'edit' && target) { %>
+      <p>Mailbox status: <span class="badge b-<%= target.email_status %>"><%= target.email_status === 'verified' ? 'Verified by an administrator' : 'Not verified' %></span></p>
+    <% } %>
+
+    <div class="cols">
+      <div data-for="student"><%- include('../partials/input', { name: 'student_no', label: 'Student number', value: old.student_no, E: errors, maxlength: 20 }) %></div>
+      <div data-for="student"><%- include('../partials/select', { name: 'program_id', label: 'Program', value: old.program_id, E: errors, options: programs.map(function (p) { return { value: p.id, label: p.code + ' — ' + p.name }; }) }) %></div>
+      <div data-for="student"><%- include('../partials/select', { name: 'section_id', label: 'Section (sets the year level)', value: old.section_id, E: errors, options: sections.map(function (s) { return { value: s.id, label: s.label, data: s.program_id }; }) }) %></div>
+      <div data-for="instructor staff admin"><%- include('../partials/input', { name: 'employee_id', label: 'Employee ID', value: old.employee_id, E: errors, maxlength: 20 }) %></div>
+      <div data-for="instructor staff"><%- include('../partials/input', { name: 'department', label: 'Department (optional)', value: old.department, E: errors, maxlength: 100 }) %></div>
+      <div data-for="staff"><%- include('../partials/select', { name: 'office_code', label: 'Office this person signs for', value: old.office_code, E: errors, options: offices.map(function (o) { return { value: o.code, label: o.name }; }) }) %></div>
+      <div data-for="staff" data-office="DEAN DEPT"><%- include('../partials/select', { name: 'college', label: 'College (Dean / Department Head)', value: old.college, E: errors, options: [...new Set(programs.map(function (p) { return p.college; }))].map(function (c) { return { value: c, label: c }; }) }) %></div>
+    </div>
+    <% if (mode === 'edit' && old.role === 'student') { %><p><a href="/admin/users/<%= userId %>/enrollment">Manage enrolled subjects &rarr;</a></p><% } %>
+    <% if (mode === 'edit' && old.role === 'instructor') { %><p><a href="/admin/users/<%= userId %>/assignments">Manage teaching assignments &rarr;</a></p><% } %>
+
+    <h2 style="margin-top:1.4rem"><%= mode === 'new' ? 'Initial password' : 'Change password (leave blank to keep)' %></h2>
+    <% if (mode === 'new') { %>
+      <label style="display:flex;gap:.5rem;font-weight:600"><input type="checkbox" name="temp_password" value="1" <%= old.temp_password === '1' ? 'checked' : '' %>> Generate a temporary password (shown once; the user must change it at first login)</label>
+    <% } %>
+    <div class="cols">
+      <%- include('../partials/password', { label: 'Password', pname: 'password', E: errors, checklist: true, rules: rules }) %>
+      <%- include('../partials/password', { label: 'Confirm password', pname: 'password2', E: errors }) %>
+    </div>
+    <p style="margin-top:1.2rem"><button class="btn" type="submit"><%= mode === 'new' ? 'Add user' : 'Save changes' %></button> <a class="btn btn-ghost" href="/admin/users">Cancel</a></p>
+  </form>
+  <% if (mode === 'edit' && target) { %>
+  <form method="POST" action="/admin/users/<%= userId %>/email-status" data-confirm="Only confirm this if you have checked that this institutional mailbox really exists. Continue?" style="margin-top:1rem">
+    <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="status" value="<%= target.email_status === 'verified' ? 'unverified' : 'verified' %>">
+    <button class="btn btn-ghost btn-sm" type="submit"><%= target.email_status === 'verified' ? 'Mark mailbox as not verified' : 'I confirmed this mailbox exists: mark verified' %></button></form>
+  <% } %>
+</section>
+<%- include('../partials/foot') %>

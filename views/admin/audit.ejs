@@ -1,0 +1,14 @@
+<%- include('../partials/head', { title }) %>
+<section class="panel">
+  <h1>Audit log</h1>
+  <p class="muted small">Append-only: there is no screen or route that edits or deletes these records.</p>
+  <form class="filters" method="GET" action="/admin/audit">
+    <%- include('../partials/input', { name: 'q', label: 'Search actor, action or details', value: q, maxlength: 60 }) %>
+    <%- include('../partials/input', { name: 'request', label: 'Request no.', value: requestNo, maxlength: 30 }) %>
+    <div class="field"><button class="btn btn-blue" type="submit">Filter</button></div>
+  </form>
+  <% if (!rows.length) { %><p class="empty">No entries.</p><% } else { %>
+  <div class="table-wrap"><table><caption class="sr-only">Audit entries</caption><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Request</th><th>Details</th></tr></thead><tbody>
+    <% rows.forEach(function (r) { %><tr><td class="small"><%= fmt(r.created_at) %></td><td><%= r.actor_label %></td><td><code><%= r.action %></code></td><td><%= r.reference_no || '' %></td><td class="small"><%= r.details || '' %></td></tr><% }); %></tbody></table></div><% } %>
+</section>
+<%- include('../partials/foot') %>

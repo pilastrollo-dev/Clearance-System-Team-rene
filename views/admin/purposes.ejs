@@ -1,0 +1,40 @@
+<%- include('../partials/head', { title }) %>
+<section class="panel">
+  <h1>Clearance purposes and required signatories</h1>
+  <p class="muted">Enter a <b>stage number</b> for every office that must sign this purpose (blank = not required). An approval can only be signed after every approval in a lower stage is cleared. Default: offices and instructors = 1, Registrar = 2, Dean = 3. Changes apply to new requests only.</p>
+  <% if (errors.signatories) { %><div class="errors" role="alert"><%= errors.signatories %></div><% } %>
+  <% purposes.forEach(function (p) { var mine = errPurpose === p.id; var E = mine ? errors : {}; %>
+  <details <%= (mine || purposes.length === 1) ? 'open' : '' %> style="border:1px solid var(--line);border-radius:12px;padding:.6rem 1rem;margin:.6rem 0">
+    <summary style="cursor:pointer;font-weight:700;color:var(--navy)"><%= p.name %> <span class="badge <%= p.is_active ? 'b-cleared' : 'b-cancelled' %>"><%= p.is_active ? 'Active' : 'Inactive' %></span></summary>
+    <form method="POST" action="/admin/purposes/<%= p.id %>" novalidate><input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="cols">
+        <%- include('../partials/input', { name: 'name', label: 'Name', value: p.name, E: E, maxlength: 60 }) %>
+        <%- include('../partials/input', { name: 'deadline_days', label: 'Overall deadline (days, blank = none)', value: p.deadline_days == null ? '' : p.deadline_days, E: E, maxlength: 3 }) %>
+        <%- include('../partials/input', { name: 'instructor_stage', label: 'Instructors’ stage (blank = not required)', value: p.instructor_stage == null ? '' : p.instructor_stage, E: E, maxlength: 1 }) %>
+      </div>
+      <label style="display:inline-flex;gap:.4rem;font-weight:600;margin-right:1.5rem"><input type="checkbox" name="requires_explanation" value="1" <%= p.requires_explanation ? 'checked' : '' %>> Student must explain</label>
+      <label style="display:inline-flex;gap:.4rem;font-weight:600"><input type="checkbox" name="is_active" value="1" <%= p.is_active ? 'checked' : '' %>> Active</label>
+      <h2 style="margin-top:1rem">Required offices (stage)</h2>
+      <div class="cols">
+        <% offices.filter(function (o) { return o.is_active; }).forEach(function (o) { %>
+          <%- include('../partials/input', { name: 'stage_' + o.code, label: o.name, value: p.stages[o.code] == null ? '' : p.stages[o.code], E: E, maxlength: 1 }) %>
+        <% }); %>
+      </div>
+      <p><button class="btn" type="submit">Save <%= p.name %></button></p>
+    </form>
+  </details>
+  <% }); %>
+</section>
+<section class="panel cols3">
+  <form method="POST" action="/admin/purposes" novalidate><input type="hidden" name="_csrf" value="<%= csrf %>"><h2>Add purpose</h2>
+    <% if (newErr && newErr.name !== undefined && !newErr.code) { %><div class="errors" role="alert"><%= newErr.error %></div><% } %>
+    <%- include('../partials/input', { name: 'name', label: 'Name', value: newErr && !newErr.code ? newErr.name : '', maxlength: 60 }) %>
+    <label style="display:flex;gap:.4rem;font-weight:600"><input type="checkbox" name="requires_explanation" value="1"> Student must explain</label>
+    <p><button class="btn" type="submit">Add purpose</button></p></form>
+  <form method="POST" action="/admin/offices" novalidate><input type="hidden" name="_csrf" value="<%= csrf %>"><h2>Add office</h2>
+    <% if (newErr && newErr.code !== undefined) { %><div class="errors" role="alert"><%= newErr.error %></div><% } %>
+    <%- include('../partials/input', { name: 'code', label: 'Code (2–10 letters)', value: newErr && newErr.code !== undefined ? newErr.code : '', maxlength: 10 }) %>
+    <%- include('../partials/input', { name: 'name', label: 'Office name', value: newErr && newErr.code !== undefined ? newErr.name : '', maxlength: 120 }) %>
+    <p><button class="btn" type="submit">Add office</button></p></form>
+</section>
+<%- include('../partials/foot') %>

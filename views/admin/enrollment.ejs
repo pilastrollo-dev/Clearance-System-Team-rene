@@ -1,0 +1,23 @@
+<%- include('../partials/head', { title }) %>
+<section class="panel">
+  <p><a href="/admin/users">&larr; Back to users</a></p>
+  <h1>Enrolled subjects · <%= person.given_name %> <%= person.family_name %></h1>
+  <p class="muted"><%= currentTerm ? currentTerm.label : 'No current term' %> · <%= person.section_label || 'no section' %></p>
+  <% if (!items.length) { %><p class="empty">No enrolled subjects yet. The student's instructor signatories come from these records.</p><% } else { %>
+  <div class="table-wrap"><table><caption class="sr-only">Enrollment</caption><thead><tr><th>Subject</th><th>Section</th><th>Instructor(s)</th><th></th></tr></thead><tbody>
+    <% items.forEach(function (i) { %><tr><td><b><%= i.subject_code %></b> <small class="muted"><%= i.title %></small></td><td><%= i.section_label %></td><td><%= i.instructors || '— none assigned —' %></td>
+      <td><form class="inline" method="POST" action="/admin/users/<%= person.id %>/enrollment/<%= i.id %>/remove" data-confirm="Remove this enrollment?"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" type="submit">Remove</button></form></td></tr><% }); %></tbody></table></div><% } %>
+</section>
+<section class="panel">
+  <h2>Enroll in a subject</h2>
+  <% if (errors._form) { %><div class="errors" role="alert"><%= errors._form %></div><% } %>
+  <form method="POST" action="/admin/users/<%= person.id %>/enrollment" novalidate><input type="hidden" name="_csrf" value="<%= csrf %>">
+    <div class="cols">
+      <%- include('../partials/select', { name: 'subject_id', label: 'Subject', value: old.subject_id, E: errors, options: subjects.map(function (s) { return { value: s.id, label: s.code + ' — ' + s.title }; }) }) %>
+      <%- include('../partials/select', { name: 'section_id', label: 'Section the subject is taken in', value: old.section_id || person.section_id, E: errors, options: sections.map(function (s) { return { value: s.id, label: s.label }; }) }) %>
+    </div>
+    <p><button class="btn" type="submit">Enroll</button></p>
+  </form>
+  <p class="muted small">Enrollment rows are kept per term. Once the student has a clearance for the term they can no longer be removed, so the clearance stays traceable.</p>
+</section>
+<%- include('../partials/foot') %>

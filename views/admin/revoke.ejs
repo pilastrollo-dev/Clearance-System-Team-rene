@@ -1,0 +1,14 @@
+<%- include('../partials/head', { title }) %>
+<section class="panel">
+  <p><a href="/admin/clearances">&larr; Back</a></p>
+  <h1>Revoke clearance <%= cert.reference_no %></h1>
+  <p>Student: <b><%= cert.given_name %> <%= cert.family_name %></b>. Scanning the QR will show <b>REVOKED</b>, the student is notified, and the previous approval history is kept. This needs a reason and your password, and is written to the audit log.</p>
+  <form method="POST" action="/admin/certificates/<%= cert.token %>/revoke" novalidate><input type="hidden" name="_csrf" value="<%= csrf %>">
+    <div class="field"><label for="reason">Reason</label><textarea id="reason" name="reason" rows="3" maxlength="255" class="<%= errors.reason ? 'invalid' : '' %>" required><%= old.reason %></textarea>
+      <% if (errors.reason) { %><p class="field-error" role="alert"><%= errors.reason %></p><% } %></div>
+    <%- include('../partials/password', { label: 'Your password (authorisation)', pname: 'password', E: errors, autocomplete: 'current-password' }) %>
+    <% if (errors._form) { %><p class="field-error"><%= errors._form %></p><% } %>
+    <p style="margin-top:1rem"><button class="btn btn-danger" type="submit">Revoke clearance</button> <a class="btn btn-ghost" href="/admin/clearances">Cancel</a></p>
+  </form>
+</section>
+<%- include('../partials/foot') %>

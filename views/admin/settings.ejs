@@ -1,0 +1,14 @@
+<%- include('../partials/head', { title }) %>
+<section class="panel">
+  <h1>Deadlines, reminders and escalation</h1>
+  <% if (Object.keys(errors).length) { %><div class="errors" role="alert">Nothing was saved. Fix the highlighted fields.</div><% } %>
+  <form method="POST" action="/admin/settings" novalidate><input type="hidden" name="_csrf" value="<%= csrf %>">
+    <div class="cols">
+      <% fields.forEach(function (f) { %><%- include('../partials/input', { name: f[0], label: f[1], value: old[f[0]], E: errors, maxlength: 4 }) %><% }); %>
+    </div>
+    <label style="display:flex;gap:.5rem;font-weight:600;margin-top:.8rem"><input type="checkbox" name="escalate_to_dept_head" value="1" <%= old.escalate_to_dept_head ? 'checked' : '' %>> Also escalate overdue approvals to the department head</label>
+    <p style="margin-top:1rem"><button class="btn" type="submit">Save settings</button></p>
+  </form>
+  <p class="muted small">Overdue reminders and escalations only notify people. They never approve a request or skip a stage.</p>
+</section>
+<%- include('../partials/foot') %>

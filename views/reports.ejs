@@ -1,0 +1,43 @@
+<%- include('partials/head', { title }) %>
+<% var t = stats.totals; var n = function (v) { return Number(v || 0); }; var hrs = function (v) { return v == null ? '—' : (Math.round(v * 10) / 10) + ' h'; }; %>
+<section class="panel">
+  <div class="row"><h1>Reports</h1><a class="btn btn-ghost" href="/reports?<%= qs %><%= qs ? '&' : '' %>format=csv">Export CSV</a></div>
+  <form class="filters" method="GET" action="/reports">
+    <%- include('partials/input', { name: 'from', label: 'From', type: 'date', value: f.from }) %>
+    <%- include('partials/input', { name: 'to', label: 'To', type: 'date', value: f.to }) %>
+    <%- include('partials/select', { name: 'term_id', label: 'Term', value: f.term_id, blank: 'All terms', options: terms.map(function (x) { return { value: x.id, label: x.label }; }) }) %>
+    <%- include('partials/select', { name: 'purpose_id', label: 'Purpose', value: f.purpose_id, blank: 'All purposes', options: purposes.map(function (x) { return { value: x.id, label: x.name }; }) }) %>
+    <%- include('partials/select', { name: 'program_id', label: 'Program', value: f.program_id, blank: 'All programs', options: programs.map(function (x) { return { value: x.id, label: x.code }; }) }) %>
+    <%- include('partials/select', { name: 'section_id', label: 'Section', value: f.section_id, blank: 'All sections', options: sections.map(function (x) { return { value: x.id, label: x.label }; }) }) %>
+    <%- include('partials/select', { name: 'office', label: 'Office', value: f.office, blank: 'All offices', options: offices.map(function (x) { return { value: x.code, label: x.name }; }) }) %>
+    <%- include('partials/select', { name: 'status', label: 'Status', value: f.status, blank: 'Any status', options: [{ value: 'in_progress', label: 'In progress' }, { value: 'on_hold', label: 'On hold' }, { value: 'overdue', label: 'Overdue' }, { value: 'completed', label: 'Completed' }, { value: 'cancelled', label: 'Cancelled' }] }) %>
+    <div class="field"><button class="btn btn-blue" type="submit">Apply</button> <a class="btn btn-ghost" href="/reports">Reset</a></div>
+  </form>
+  <div class="grid">
+    <div class="stat"><b><%= n(t.total) %></b>Requests</div><div class="stat"><b><%= n(t.in_progress) %></b>In progress</div><div class="stat"><b><%= n(t.on_hold) %></b>On hold</div>
+    <div class="stat"><b><%= n(t.awaiting_registrar) %></b>Awaiting Registrar</div><div class="stat"><b><%= n(t.awaiting_dean) %></b>Awaiting Dean</div><div class="stat"><b><%= n(t.overdue) %></b>Overdue</div>
+    <div class="stat"><b><%= n(t.completed) %></b>Completed</div><div class="stat"><b><%= stats.openIssues %></b>Open compliance issues</div><div class="stat"><b><%= hrs(t.avg_hours) %></b>Avg. time to complete</div>
+  </div>
+</section>
+<section class="panel cols3">
+  <div><h2>By purpose</h2><% stats.byPurpose.forEach(function (r) { %><div class="bar-row"><span><%= r.k %></span><b><%= r.n %></b></div><% }); %><% if (!stats.byPurpose.length) { %><p class="muted">No data.</p><% } %></div>
+  <div><h2>By term</h2><% stats.byTerm.forEach(function (r) { %><div class="bar-row"><span><%= r.k %></span><b><%= r.n %></b></div><% }); %><% if (!stats.byTerm.length) { %><p class="muted">No data.</p><% } %></div>
+  <div><h2>By program · year · section</h2><% stats.byGroup.forEach(function (r) { %><div class="bar-row"><span><%= r.k %></span><b><%= r.n %></b></div><% }); %><% if (!stats.byGroup.length) { %><p class="muted">No data.</p><% } %></div>
+</section>
+<section class="panel">
+  <h2>By office: workload and turnaround</h2>
+  <div class="table-wrap"><table><caption class="sr-only">Office workload</caption><thead><tr><th>Office</th><th>Pending</th><th>On hold</th><th>Cleared</th><th>Avg. turnaround</th></tr></thead><tbody>
+    <% stats.bySigner.forEach(function (r) { %><tr><td><%= r.k %></td><td><%= n(r.pending) %></td><td><%= n(r.on_hold) %></td><td><%= n(r.cleared) %></td><td><%= hrs(r.avg_hours) %></td></tr><% }); %></tbody></table></div>
+  <h2 style="margin-top:1rem">By instructor</h2>
+  <div class="table-wrap"><table><caption class="sr-only">Instructor workload</caption><thead><tr><th>Instructor</th><th>Pending</th><th>On hold</th><th>Cleared</th></tr></thead><tbody>
+    <% stats.byInstructor.forEach(function (r) { %><tr><td><%= r.k %></td><td><%= n(r.pending) %></td><td><%= n(r.on_hold) %></td><td><%= n(r.cleared) %></td></tr><% }); %></tbody></table></div>
+</section>
+<section class="panel">
+  <h2>Requests (<%= rows.length %>)</h2>
+  <% if (!rows.length) { %><p class="empty">No requests match these filters.</p><% } else { %>
+  <div class="table-wrap"><table><caption class="sr-only">Matching requests</caption><thead><tr><th>Request</th><th>Student</th><th>Purpose</th><th>Program</th><th>Signed</th><th>Issues</th><th>Status</th></tr></thead><tbody>
+    <% rows.forEach(function (r) { %><tr><td><%= r.reference_no %><br><small class="muted"><%= fmt(r.created_at) %></small></td><td><%= r.given_name %> <%= r.family_name %><br><small class="muted"><%= r.student_no %></small></td><td><%= r.purpose %></td>
+      <td><%= r.program || '—' %> <%= r.year_level || '' %><%= r.section || '' %></td><td><%= r.done %> / <%= r.total %></td><td><%= r.open_issues %></td>
+      <td><span class="badge b-<%= r.status %>"><%= r.status === 'in_progress' ? 'In progress' : r.status === 'completed' ? 'Completed' : 'Cancelled' %></span></td></tr><% }); %></tbody></table></div><% } %>
+</section>
+<%- include('partials/foot') %>

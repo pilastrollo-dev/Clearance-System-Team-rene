@@ -1,0 +1,52 @@
+<%- include('../partials/head', { title }) %>
+<% var stages = [...new Set(all.map(function (r) { return r.stage; }))].sort(function (a, b) { return a - b; }); %>
+<section class="panel">
+  <p><a href="/staff">&larr; Back to requests</a></p>
+  <h1><%= a.given_name %> <%= a.family_name %> · <%= a.reference_no %></h1>
+  <dl class="kv">
+    <dt>Student no.</dt><dd><%= a.student_no %></dd><dt>Section</dt><dd><%= a.section_label || '—' %> · <%= a.student_college %></dd>
+    <dt>Purpose</dt><dd><%= a.purpose %><%= a.purpose_other ? ' — ' + a.purpose_other : '' %></dd>
+    <dt>You sign as</dt><dd><%= a.label %> (stage <%= a.stage %>)</dd>
+    <dt>Due</dt><dd><%= a.due_at ? fmt(a.due_at) : 'Not started' %> <% if (overdue) { %><span class="badge b-overdue">Overdue</span><% } %></dd>
+    <dt>Status</dt><dd><span class="badge b-<%= a.status %>"><%= a.status === 'pending' ? 'Pending' : a.status === 'on_hold' ? 'On Hold' : 'Cleared ✓' %></span></dd>
+  </dl>
+</section>
+
+<section class="panel">
+  <h2>Where the student stands</h2>
+  <% stages.forEach(function (st) { %>
+    <div class="step">Stage <%= st %></div>
+    <ul class="timeline"><% all.filter(function (r) { return r.stage === st; }).forEach(function (x) { %>
+      <li class="s-<%= x.status %>"><%= x.label %><%= x.id === a.id ? ' (you)' : '' %> — <span class="badge b-<%= x.status %>"><%= x.status === 'pending' ? 'Pending' : x.status === 'on_hold' ? 'On Hold' : 'Cleared ✓' %></span><% if (x.status === 'on_hold' && x.remarks) { %><br><small class="muted"><%= x.remarks %></small><% } %></li>
+    <% }); %></ul>
+  <% }); %>
+  <% issues.forEach(function (i) { %><div class="issue <%= i.status === 'resolved' ? 'resolved' : '' %>"><b><%= i.office_code %></b> · <%= i.kind %> · <%= i.status %><br><%= i.description %></div><% }); %>
+</section>
+
+<section class="panel">
+  <h2>Your decision</h2>
+  <% if (errors.action) { %><div class="errors" role="alert"><%= errors.action %></div><% } %>
+  <% if (readOnly) { %><p class="muted">This item is read-only for you (monitoring only, or the clearance is no longer in progress).</p>
+  <% } else { %>
+    <% if (blocked) { %><p class="errors" role="alert">🔒 <%= blocked %><br><small>You cannot clear this yet. The approval button stays blocked until the outstanding items are cleared.</small></p><% } %>
+    <% if (laterSigned) { %><p class="errors">A later stage has already signed, so this item is locked. Ask the administrator to revoke the clearance if it must change.</p><% } %>
+    <form method="POST" action="/staff/approvals/<%= a.id %>" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <fieldset style="border:0;padding:0;margin:0"><legend style="font-weight:600;color:var(--navy)">Action</legend>
+        <label style="display:flex;gap:.5rem;font-weight:600;margin:.3rem 0"><input type="radio" name="action" value="clear" <%= old.action === 'clear' ? 'checked' : '' %> <%= (blocked || a.status === 'cleared') ? 'disabled' : '' %>> Clear and sign (requirement verified)</label>
+        <label style="display:flex;gap:.5rem;font-weight:600;margin:.3rem 0"><input type="radio" name="action" value="hold" <%= old.action === 'hold' ? 'checked' : '' %> <%= laterSigned ? 'disabled' : '' %>> Place On Hold (compliance issue)</label>
+        <% if (a.status === 'cleared') { %><label style="display:flex;gap:.5rem;font-weight:600;margin:.3rem 0"><input type="radio" name="action" value="pending" <%= old.action === 'pending' ? 'checked' : '' %> <%= laterSigned ? 'disabled' : '' %>> Reset to Pending (undo my clearance)</label><% } %>
+      </fieldset>
+      <%- include('../partials/select', { name: 'kind', label: 'Type of compliance issue (for On Hold)', value: old.kind, E: errors, blank: 'General', options: [{ value: 'property', label: 'Property accountability' }, { value: 'financial', label: 'Financial obligation' }, { value: 'general', label: 'General' }] }) %>
+      <div class="field"><label for="remarks">Remarks / reason (required for On Hold)</label>
+        <textarea id="remarks" name="remarks" rows="3" maxlength="255" class="<%= errors.remarks ? 'invalid' : '' %>" <%= errors.remarks ? 'aria-invalid="true" aria-describedby="remarks-err"' : '' %>><%= old.remarks || '' %></textarea>
+        <% if (errors.remarks) { %><p class="field-error" id="remarks-err" role="alert"><%= errors.remarks %></p><% } %></div>
+      <h2 style="margin-top:1rem">Electronic signature</h2>
+      <p class="muted small">To clear, confirm and re-enter your password. A typed name alone is not a signature. <%= hasSignature ? 'Your saved signature image will be printed on the form.' : '' %> <% if (!hasSignature) { %><a href="/account/signature">Add your signature image</a> so it is printed on the form.<% } %></p>
+      <label style="display:flex;gap:.5rem;font-weight:600"><input type="checkbox" name="confirm" value="yes"> I confirm that I verified this requirement and I am signing as <%= a.label %>.</label>
+      <%- include('../partials/password', { label: 'Your password', pname: 'password', E: errors, autocomplete: 'current-password' }) %>
+      <p style="margin-top:1rem"><button class="btn" type="submit">Submit decision</button></p>
+    </form>
+  <% } %>
+</section>
+<%- include('../partials/foot') %>

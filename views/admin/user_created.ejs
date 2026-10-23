@@ -1,0 +1,15 @@
+<%- include('../partials/head', { title }) %>
+<section class="panel">
+  <h1>✅ <%= created.given_name %> <%= created.family_name %> was added</h1>
+  <dl class="kv"><dt>Role</dt><dd><%= created.role %><%= created.office_code ? ' · ' + created.office_code : '' %></dd><dt>Login email</dt><dd><%= created.email %></dd>
+    <dt>Mailbox</dt><dd><span class="badge b-unverified">Not verified</span> This address was registered in the system; it does not create or prove a real mailbox.</dd></dl>
+  <% if (tempPassword) { %>
+    <div class="cred" style="margin-top:1rem"><p style="margin:0 0 .4rem"><b>Temporary password (shown once, not stored anywhere in readable form):</b></p><code><%= tempPassword %></code>
+      <p class="small muted" style="margin:.5rem 0 0">Give it to the user privately. They must choose a new password at first login. Do not reload this page.</p></div>
+  <% } %>
+  <p style="margin-top:1rem"><a class="btn" href="/admin/users/new">Add another</a>
+    <% if (created.role === 'student') { %> <a class="btn btn-blue" href="/admin/users/<%= created.id %>/enrollment">Enroll subjects</a><% } %>
+    <% if (created.role === 'instructor') { %> <a class="btn btn-blue" href="/admin/users/<%= created.id %>/assignments">Assign subjects</a><% } %>
+    <a class="btn btn-ghost" href="/admin/users">Back to users</a></p>
+</section>
+<%- include('../partials/foot') %>

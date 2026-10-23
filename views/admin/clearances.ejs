@@ -1,0 +1,18 @@
+<%- include('../partials/head', { title }) %>
+<section class="panel">
+  <h1>All clearances</h1>
+  <% if (!rows.length) { %><p class="empty">No clearance has been submitted yet.</p><% } else { %>
+  <div class="table-wrap"><table><caption class="sr-only">Every clearance request</caption>
+    <thead><tr><th>Request</th><th>Student</th><th>Purpose</th><th>Signed</th><th>Status</th><th>QR</th><th></th></tr></thead><tbody>
+    <% rows.forEach(function (r) { %><tr>
+      <td><b><%= r.reference_no %></b><br><small class="muted"><%= fmt(r.created_at) %></small></td>
+      <td><%= r.given_name %> <%= r.family_name %><br><small class="muted"><%= r.student_no %></small></td><td><%= r.purpose %></td>
+      <td><%= r.done %> / <%= r.total %><% if (Number(r.open_issues)) { %><br><span class="badge b-on_hold"><%= r.open_issues %> issue(s)</span><% } %></td>
+      <td><span class="badge b-<%= r.status %>"><%= r.status === 'in_progress' ? 'In progress' : r.status === 'completed' ? 'Completed' : 'Cancelled' %></span></td>
+      <td><% if (r.certStatus) { %><span class="badge b-<%= r.certStatus %>"><%= r.certStatus.toUpperCase() %></span><% } else { %>—<% } %></td>
+      <td><a class="btn btn-ghost btn-sm" href="/forms/<%= r.id %>" target="_blank" rel="noopener">Form</a>
+        <% if (r.cert) { %><a class="btn btn-ghost btn-sm" href="/verify/<%= r.cert.token %>">Verify</a>
+        <% if (r.certStatus !== 'revoked') { %><a class="btn btn-ghost btn-sm" href="/admin/certificates/<%= r.cert.token %>/revoke">Revoke</a><% } %><% } %></td>
+    </tr><% }); %></tbody></table></div><% } %>
+</section>
+<%- include('../partials/foot') %>

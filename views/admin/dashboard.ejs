@@ -1,0 +1,29 @@
+<%- include('../partials/head', { title }) %>
+<% var t = stats.totals; var n = function (v) { return Number(v || 0); }; %>
+<section class="panel">
+  <h1>Dashboard</h1>
+  <div class="grid">
+    <div class="stat"><b><%= n(t.total) %></b>Total requests</div>
+    <div class="stat"><b><%= n(t.pending) %></b>With pending approvals</div>
+    <div class="stat"><b><%= n(t.on_hold) %></b>On hold</div>
+    <div class="stat"><b><%= n(t.awaiting_registrar) %></b>Awaiting Registrar</div>
+    <div class="stat"><b><%= n(t.awaiting_dean) %></b>Awaiting Dean</div>
+    <div class="stat"><b><%= n(t.completed) %></b>Completed</div>
+    <div class="stat"><b><%= n(t.overdue) %></b>Overdue</div>
+    <div class="stat"><b><%= stats.openIssues %></b>Unresolved compliance issues</div>
+    <div class="stat"><b><%= t.avg_hours != null ? Math.round(t.avg_hours / 24 * 10) / 10 : '—' %></b>Avg. days to complete</div>
+  </div>
+  <p class="muted small" style="margin-top:.8rem"><%= counts.student || 0 %> students · <%= counts.instructor || 0 %> instructors · <%= counts.staff || 0 %> office staff · <a href="/reports">Full reports and CSV export</a></p>
+</section>
+<section class="panel">
+  <div class="row"><h2>Overdue approvals</h2>
+    <form class="inline" method="POST" action="/admin/reminders/run"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-blue btn-sm" type="submit">Run follow-up check now</button></form></div>
+  <p class="muted small">Each approval is due <%= settings.dueHours %> h after it becomes actionable. Signers get a notice <%= settings.dueSoonHours %> h before, a reminder when overdue (then every <%= settings.remindEveryHours %> h), and an escalation to you<%= settings.escalateToDeptHead ? ' and the department head' : '' %> after <%= settings.escalateAfterHours %> h. Reminders never approve anything. <a href="/admin/settings">Change</a></p>
+  <% if (!overdue.length) { %><p class="empty">Nothing is overdue. 🎉</p><% } else { %>
+  <div class="table-wrap"><table><caption class="sr-only">Overdue approvals</caption>
+    <thead><tr><th>Request</th><th>Student</th><th>Responsible</th><th>State</th><th>Overdue</th><th>Reminders</th><th>Escalated</th></tr></thead><tbody>
+    <% overdue.forEach(function (a) { %><tr><td><%= a.reference_no %></td><td><%= a.given_name %> <%= a.family_name %></td><td><%= a.label %></td>
+      <td><span class="badge b-<%= a.status %>"><%= a.status === 'on_hold' ? 'On Hold' : 'Pending' %></span></td><td><span class="badge b-overdue"><%= a.hours %> h</span></td><td><%= a.reminder_count %></td><td><%= a.escalated_at ? fmt(a.escalated_at) : '—' %></td></tr><% }); %>
+  </tbody></table></div><% } %>
+</section>
+<%- include('../partials/foot') %>

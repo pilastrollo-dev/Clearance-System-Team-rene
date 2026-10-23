@@ -1,0 +1,24 @@
+<%- include('../partials/head', { title }) %>
+<section class="panel">
+  <div class="row"><h1>Users</h1><a class="btn" href="/admin/users/new">+ Add user</a></div>
+  <form class="filters" method="GET" action="/admin/users">
+    <%- include('../partials/input', { name: 'q', label: 'Search', value: q, placeholder: 'Name, email, student no. or employee ID', maxlength: 60 }) %>
+    <%- include('../partials/select', { name: 'role', label: 'Role', value: role, blank: 'All roles', options: roles.map(function (r) { return { value: r, label: r }; }) }) %>
+    <div class="field"><button class="btn btn-blue" type="submit">Filter</button></div>
+  </form>
+  <% if (!users.length) { %><p class="empty">No users match.</p><% } else { %>
+  <div class="table-wrap"><table><caption class="sr-only">User accounts</caption>
+    <thead><tr><th>Name</th><th>Email</th><th>Role / office</th><th>Details</th><th>Status</th><th></th></tr></thead><tbody>
+    <% users.forEach(function (u) { %>
+      <tr><td><b><%= u.given_name %> <%= u.family_name %></b> <% if (u.is_sample) { %><span class="badge b-sample">Sample</span><% } %></td>
+        <td class="small"><%= u.email %><br><span class="badge b-<%= u.email_status %>"><%= u.email_status === 'verified' ? 'Mailbox verified' : 'Not verified' %></span></td>
+        <td><%= u.role %><%= u.office_code ? ' · ' + u.office_code : '' %></td>
+        <td class="small"><%= u.student_no || u.employee_id || '' %><%= u.section_label ? ' · ' + u.section_label : '' %></td>
+        <td><span class="badge <%= u.is_active ? 'b-cleared' : 'b-cancelled' %>"><%= u.is_active ? 'Active' : 'Deactivated' %></span></td>
+        <td><a class="btn btn-ghost btn-sm" href="/admin/users/<%= u.id %>/edit">Edit</a>
+          <% if (u.role === 'student') { %><a class="btn btn-ghost btn-sm" href="/admin/users/<%= u.id %>/enrollment">Subjects</a><% } %>
+          <% if (u.role === 'instructor') { %><a class="btn btn-ghost btn-sm" href="/admin/users/<%= u.id %>/assignments">Teaching</a><% } %>
+          <% if (u.id !== user.id) { %><form class="inline" method="POST" action="/admin/users/<%= u.id %>/toggle" data-confirm="<%= u.is_active ? 'Deactivate this account? They will no longer be able to log in.' : 'Reactivate this account?' %>"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" type="submit"><%= u.is_active ? 'Deactivate' : 'Reactivate' %></button></form><% } %></td></tr>
+    <% }); %></tbody></table></div><% } %>
+</section>
+<%- include('../partials/foot') %>

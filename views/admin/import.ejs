@@ -1,0 +1,43 @@
+<%- include('../partials/head', { title }) %>
+<%
+  var cols = { subjects: 'code, title', enrollments: 'student_no, subject_code, section (e.g. BSIT 2C)', assignments: 'instructor (employee ID or email), subject_code, section' };
+  var badge = { ok: 'b-cleared', skip: 'b-pending', error: 'b-rejected' };
+  var label = { ok: 'Will import', skip: 'Skipped', error: 'Error' };
+%>
+<section class="panel">
+  <h1>Bulk import</h1>
+  <p class="muted">Add many records at once instead of one by one. You always see a preview first and nothing is saved until you confirm. Enrollments and assignments go into the <b>current term (<%= term %>)</b>.</p>
+  <% if (error) { %><div class="errors" role="alert"><%= error %></div><% } %>
+  <% if (info) { %><p class="flash" role="status"><%= info %></p><% } %>
+  <form method="POST" action="/admin/import/check" novalidate id="import-form"><input type="hidden" name="_csrf" value="<%= csrf %>">
+    <input type="hidden" name="pdf_base64" id="pdf_base64" value="">
+    <%- include('../partials/select', { name: 'kind', label: 'What do you want to import?', value: kind, blank: null, options: Object.keys(kinds).map(function (k) { return { value: k, label: kinds[k].label }; }) }) %>
+    <p class="hint">Columns for the selected type: <b id="cols-hint"><%= cols[kind] %></b>. <a id="tpl" href="/admin/import/template/<%= kind %>">Download a template CSV</a></p>
+    <div class="cols">
+      <div class="field"><label for="csv_file">Choose a CSV file</label><input type="file" id="csv_file" accept=".csv,.txt,text/csv,text/plain" data-fill="csv_text"></div>
+      <div class="field" id="pdf-box"><label for="pdf_file">…or a subject-list PDF (subjects only)</label><input type="file" id="pdf_file" accept="application/pdf" data-pdf="pdf_base64"><p class="hint">Only PDFs with selectable text can be read. Scans cannot. You will review the result before anything is saved.</p></div>
+    </div>
+    <div class="field"><label for="csv_text">Rows (CSV). You can also paste or fix them here</label>
+      <textarea id="csv_text" name="csv_text" rows="8" spellcheck="false" style="font-family:ui-monospace,Consolas,monospace"><%= text %></textarea></div>
+    <p><button class="btn" type="submit">Check</button></p>
+  </form>
+</section>
+
+<% if (results) { %>
+<section class="panel">
+  <h2>Preview</h2>
+  <p><span class="badge b-cleared"><%= summary.ok %> will import</span> <span class="badge b-pending"><%= summary.skip %> skipped (already there)</span> <span class="badge b-rejected"><%= summary.error %> with errors (not imported)</span></p>
+  <div class="table-wrap"><table><caption class="sr-only">Import preview</caption>
+    <thead><tr><th>Line</th><th>Row</th><th>Result</th></tr></thead><tbody>
+    <% results.slice(0, 300).forEach(function (r) { %><tr><td><%= r.line %></td><td class="small"><%= r.cells.join(' · ') %></td>
+      <td><span class="badge <%= badge[r.status] %>"><%= label[r.status] %></span> <small><%= r.message %></small></td></tr><% }); %></tbody></table></div>
+  <% if (results.length > 300) { %><p class="muted small">Showing the first 300 of <%= results.length %> rows. All rows are processed on import.</p><% } %>
+  <% if (summary.ok > 0) { %>
+  <form method="POST" action="/admin/import/commit" data-confirm="Import <%= summary.ok %> row(s)? Rows with errors will not be imported."><input type="hidden" name="_csrf" value="<%= csrf %>">
+    <input type="hidden" name="kind" value="<%= kind %>"><input type="hidden" name="csv_text" value="<%= text %>">
+    <button class="btn" type="submit">Import <%= summary.ok %> valid row(s)</button>
+    <% if (summary.error) { %><span class="muted small"> The <%= summary.error %> row(s) with errors will be left out. Fix them above and press Check again to include them.</span><% } %></form>
+  <% } else { %><p class="empty">Nothing valid to import. Fix the rows above and press Check again.</p><% } %>
+</section>
+<% } %>
+<%- include('../partials/foot') %>

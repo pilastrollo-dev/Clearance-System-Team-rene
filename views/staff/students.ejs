@@ -1,0 +1,18 @@
+<%- include('../partials/head', { title }) %>
+<section class="panel">
+  <h1>My students · <%= term %></h1>
+  <p class="muted small">Only students enrolled in a subject and section you are assigned to appear here.</p>
+  <form class="filters" method="GET" action="/staff/students">
+    <%- include('../partials/input', { name: 'q', label: 'Search name or student no.', value: f.q, maxlength: 60 }) %>
+    <%- include('../partials/select', { name: 'subject_id', label: 'Subject', value: f.subject_id || '', options: subjects.map(function (s) { return { value: s.id, label: s.label }; }), blank: 'All subjects' }) %>
+    <%- include('../partials/select', { name: 'section_id', label: 'Section', value: f.section_id || '', options: sections.map(function (s) { return { value: s.id, label: s.label }; }), blank: 'All sections' }) %>
+    <div class="field"><button class="btn btn-blue" type="submit">Filter</button></div>
+  </form>
+  <% if (!students.length) { %><p class="empty">No students match.</p><% } else { %>
+  <div class="table-wrap"><table><caption class="sr-only">Students in your classes</caption>
+    <thead><tr><th>Student</th><th>Subject</th><th>Section</th><th>Clearance</th><th>My approval</th></tr></thead><tbody>
+    <% students.forEach(function (s) { %><tr><td><b><%= s.given_name %> <%= s.family_name %></b><br><small class="muted"><%= s.student_no %></small></td><td><%= s.subject_code %></td><td><%= s.section_label %></td>
+      <td><%= s.clearance_status ? (s.clearance_status === 'in_progress' ? 'In progress' : s.clearance_status === 'completed' ? 'Completed' : 'Cancelled') : 'Not started' %></td>
+      <td><%= s.my_status ? (s.my_status === 'on_hold' ? 'On Hold' : s.my_status === 'cleared' ? 'Cleared' : 'Pending') : '—' %></td></tr><% }); %></tbody></table></div><% } %>
+</section>
+<%- include('../partials/foot') %>

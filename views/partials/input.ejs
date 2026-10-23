@@ -1,0 +1,18 @@
+<%
+  var _E = (typeof E !== 'undefined' && E) ? E : {};
+  var _err = _E[name] || '';
+  var _type = typeof type !== 'undefined' ? type : 'text';
+  var _val = (typeof value !== 'undefined' && value !== null && _type !== 'password') ? value : '';
+%>
+<div class="field">
+  <label for="<%= name %>"><%= label %><% if (typeof required !== 'undefined' && required) { %> <span class="req" aria-hidden="true">*</span><span class="sr-only">(required)</span><% } %></label>
+  <input id="<%= name %>" name="<%= name %>" type="<%= _type %>" value="<%= _val %>" class="<%= _err ? 'invalid' : '' %>"
+    <% if (typeof maxlength !== 'undefined') { %>maxlength="<%= maxlength %>"<% } %>
+    <% if (typeof autocomplete !== 'undefined') { %>autocomplete="<%= autocomplete %>"<% } %>
+    <% if (typeof placeholder !== 'undefined') { %>placeholder="<%= placeholder %>"<% } %>
+    <% if (typeof attrs !== 'undefined') { %><%- attrs %><% } %>
+    <%= (typeof required !== 'undefined' && required) ? 'required' : '' %>
+    <% if (_err) { %>aria-invalid="true" aria-describedby="<%= name %>-err"<% } else if (typeof hint !== 'undefined') { %>aria-describedby="<%= name %>-hint"<% } %>>
+  <% if (typeof hint !== 'undefined' && hint) { %><p class="hint" id="<%= name %>-hint"><%= hint %></p><% } %>
+  <% if (_err) { %><p class="field-error" id="<%= name %>-err" role="alert"><%= _err %></p><% } %>
+</div>

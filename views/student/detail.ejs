@@ -1,0 +1,65 @@
+<%- include('../partials/head', { title }) %>
+<%
+  var stages = [...new Set(rows.map(function (r) { return r.stage; }))].sort(function (a, b) { return a - b; });
+  var openIssues = issues.filter(function (i) { return i.status === 'open'; });
+%>
+<section class="panel">
+  <div class="row">
+    <div><h1><%= request.reference_no %></h1>
+      <p class="muted" style="margin:0"><%= request.purpose %><%= request.purpose_other ? ' — ' + request.purpose_other : '' %> · <%= request.semester %> SY <%= request.academic_year %> · submitted <%= fmt(request.created_at) %></p></div>
+    <div><span class="badge b-<%= request.status %>"><%= request.status === 'in_progress' ? 'In progress' : request.status === 'completed' ? 'Completed' : 'Cancelled' %></span>
+      <a class="btn btn-ghost btn-sm" href="/forms/<%= request.id %>" target="_blank" rel="noopener">Printable form</a></div>
+  </div>
+  <div class="bar" style="margin:.9rem 0 .2rem" role="progressbar" aria-valuenow="<%= progress.done %>" aria-valuemin="0" aria-valuemax="<%= progress.total %>"><i style="width:<%= progress.pct %>%"></i></div>
+  <small class="muted"><%= progress.done %> of <%= progress.total %> approvals cleared<% if (request.deadline_at) { %> · deadline <%= fmt(request.deadline_at) %><% } %></small>
+  <% if (requestOverdue) { %> <span class="badge b-overdue">Past deadline</span><% } %>
+</section>
+
+<% if (cert) { %>
+<section class="panel">
+  <h2>Final clearance · QR verification</h2>
+  <div class="qrbox">
+    <img src="<%= qr %>" alt="QR code for clearance <%= request.reference_no %>">
+    <div>
+      <p><span class="badge b-<%= certStatus %>"><%= certStatus.toUpperCase() %></span></p>
+      <dl class="kv"><dt>Issued</dt><dd><%= fmt(cert.issued_at) %></dd><dt>Valid until</dt><dd><%= fmt(cert.expires_at) %></dd>
+        <% if (cert.revoked_at) { %><dt>Revoked</dt><dd><%= cert.revoked_reason %></dd><% } %><% if (cert.used_at) { %><dt>Used on</dt><dd><%= fmt(cert.used_at) %></dd><% } %></dl>
+      <p class="small muted">Scanning shows whether this clearance is valid, expired, revoked or already used.<br><a href="<%= verifyUrl %>"><%= verifyUrl %></a></p>
+      <a class="btn" href="/forms/<%= request.id %>" target="_blank" rel="noopener">Open printable clearance (save as PDF)</a>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<% if (openIssues.length) { %>
+<section class="panel">
+  <h2>What you need to resolve</h2>
+  <% openIssues.forEach(function (i) { var a = rows.filter(function (r) { return r.id === i.approval_id; })[0]; %>
+    <div class="issue"><b><%= a ? a.label : i.office_code %></b> <span class="badge b-on_hold">On Hold · <%= i.kind %></span><br><%= i.description %><br><small class="muted">Raised <%= fmt(i.raised_at) %>. Settle it with that office, then ask them to review and clear it.</small></div>
+  <% }); %>
+</section>
+<% } %>
+
+<section class="panel">
+  <h2>Approval timeline</h2>
+  <% stages.forEach(function (st) { var items = rows.filter(function (r) { return r.stage === st; }); %>
+    <div class="step">Stage <%= st %><%= st === stages[0] ? ' · reviewed in any order' : ' · starts after Stage ' + (st - 1 > 0 ? 'all earlier stages' : '') %></div>
+    <ul class="timeline">
+      <% items.forEach(function (a) { %>
+      <li class="s-<%= a.status %>">
+        <b><%= a.label %></b> <span class="badge b-<%= a.status %>"><%= a.status === 'pending' ? 'Pending' : a.status === 'on_hold' ? 'On Hold' : 'Cleared ✓' %></span>
+        <% if (a.overdue) { %><span class="badge b-overdue">Overdue<%= a.escalated_at ? ' · escalated' : '' %></span><% } %>
+        <br><small class="muted">
+          <% if (a.status === 'cleared') { %>Cleared <%= fmt(a.acted_at) %><% } else if (a.eligible_at) { %>Waiting for them · due <%= fmt(a.due_at) %><% } else { %>🔒 Not started: waiting for earlier stages<% } %>
+        </small>
+        <% if (a.status === 'on_hold' && a.remarks) { %><br><small><b>Reason:</b> <%= a.remarks %></small><% } %>
+      </li>
+      <% }); %>
+    </ul>
+  <% }); %>
+  <% if (request.status === 'in_progress') { %>
+    <form method="POST" action="/student/clearances/<%= request.id %>/cancel" data-confirm="Cancel this clearance request? You can start a new one afterwards." style="margin-top:1rem"><input type="hidden" name="_csrf" value="<%= csrf %>">
+      <button class="btn btn-ghost btn-sm" type="submit">Cancel this request</button></form>
+  <% } %>
+</section>
+<%- include('../partials/foot') %>

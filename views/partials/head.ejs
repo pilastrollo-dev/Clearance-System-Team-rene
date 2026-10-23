@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="clear-draft" content="<%= locals.clearDraft || '' %>">
+  <title><%= title %> · CSPC Digital Clearance</title>
+  <link rel="icon" href="/img/logo.png">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="app">
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="/"><img src="/img/logo.png" alt="Camarines Sur Polytechnic Colleges seal"><span><strong>CSPC Digital Clearance</strong><small><%= term %></small></span></a>
+    <% if (user) { %>
+    <nav aria-label="Main">
+      <% if (user.role === 'student') { %>
+        <a href="/student">My clearances</a><a href="/student/clearances/new">New clearance</a>
+      <% } else if (user.role === 'admin') { %>
+        <a href="/admin">Dashboard</a><a href="/admin/users">Users</a><a href="/admin/academics">Academics</a><a href="/admin/purposes">Purposes</a><a href="/admin/clearances">Clearances</a><a href="/reports">Reports</a><a href="/admin/audit">Audit</a><a href="/admin/settings">Settings</a>
+      <% } else if (user.role === 'instructor') { %>
+        <a href="/staff">Requests</a><a href="/staff/students">My students</a>
+      <% } else { %>
+        <a href="/staff">Requests</a><% if (user.office_code === 'REG') { %><a href="/reports">Reports</a><% } %>
+      <% } %>
+    </nav>
+    <div class="who">
+      <a class="bell" href="/notifications" aria-label="Notifications, <%= unread %> unread">🔔<% if (unread) { %><span class="count"><%= unread %></span><% } %></a>
+      <span><%= user.given_name %> <%= user.family_name %><span class="role"><a href="/account/password">Change password</a><% if (user.role === 'instructor' || user.role === 'staff') { %> · <a href="/account/signature">My signature</a><% } %></span></span>
+      <form method="POST" action="/logout"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" type="submit">Log out</button></form>
+    </div>
+    <% } %>
+  </div>
+</header>
+<main id="main" class="container">
+<% if (flash) { %><p class="flash" role="status"><%= flash %></p><% } %>

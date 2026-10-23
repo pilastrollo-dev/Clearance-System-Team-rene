@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clearance <%= request.reference_no %> · CSPC</title>
+  <link rel="icon" href="/img/logo.png"><link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="sheet">
+<p class="no-print" style="text-align:center;margin:.8rem"><button class="btn" type="button" data-print>Print / Save as PDF</button> <a class="btn btn-ghost" href="javascript:history.back()">Back</a></p>
+<article class="paper">
+  <% if (request.status !== 'completed') { %><div class="watermark" aria-hidden="true"><%= request.status === 'cancelled' ? 'CANCELLED' : 'NOT YET\nCOMPLETED' %></div><% } %>
+  <% if (certStatus === 'revoked') { %><div class="watermark" aria-hidden="true">REVOKED</div><% } %>
+  <div class="head"><img src="/img/logo.png" alt="CSPC seal"><h1>CAMARINES SUR POLYTECHNIC COLLEGES</h1><div class="muted small">Nabua, Camarines Sur</div><h1 style="margin-top:.5rem">STUDENT CLEARANCE</h1></div>
+  <table>
+    <tr><th>Name</th><td><%= student.given_name %> <%= student.middle_name ? student.middle_name + ' ' : '' %><%= student.family_name %></td><th>Student no.</th><td><%= student.student_no %></td></tr>
+    <tr><th>Program</th><td><%= student.program || '—' %></td><th>Year / Section</th><td><%= student.year_level || '—' %> / <%= student.section_label || '—' %></td></tr>
+    <tr><th>Term</th><td><%= request.semester %> SY <%= request.academic_year %></td><th>Request no.</th><td><%= request.reference_no %></td></tr>
+    <tr><th>Submitted</th><td><%= fmt(request.created_at) %></td><th>Final approval</th><td><%= request.completed_at ? fmt(request.completed_at) : '—' %></td></tr>
+  </table>
+  <p style="margin:.7rem 0"><b>Purpose:</b>
+    <% ['Graduation', 'Transfer', 'Leave of Absence'].forEach(function (p) { %> <%= request.purpose === p ? '☑' : '☐' %> <%= p %> &nbsp;<% }); %>
+    <%= !['Graduation', 'Transfer', 'Leave of Absence'].includes(request.purpose) ? '☑' : '☐' %> Others<%= !['Graduation', 'Transfer', 'Leave of Absence'].includes(request.purpose) ? ': ' + (request.purpose_other || request.purpose) : '' %></p>
+  <p class="small">This is to certify that the above-named student is cleared of all property/financial obligations due to the College once every signatory below has cleared.</p>
+  <table>
+    <thead><tr><th>Stage</th><th>Signatory</th><th>Status</th><th>Electronic signature</th><th>Remarks</th></tr></thead><tbody>
+    <% rows.forEach(function (a) { var sg = signatures[a.id]; %>
+      <tr><td><%= a.stage %></td><td><%= a.label %></td><td><%= a.status === 'pending' ? 'Pending' : a.status === 'on_hold' ? 'On Hold' : 'Cleared' %></td>
+        <td class="sigcell"><% if (sg && sg.signature_image && /^data:image\/(png|jpeg);base64,[A-Za-z0-9+\/]+={0,2}$/.test(sg.signature_image)) { %><img src="<%= sg.signature_image %>" alt="Signature of <%= sg.given_name %> <%= sg.family_name %>" style="max-height:44px;max-width:150px;display:block"><% } %><% if (sg) { %><b><%= sg.given_name %> <%= sg.family_name %></b><%= fmt(sg.signed_at) %><br>ref <%= sg.signature_hash.slice(0, 10) %><% } else { %>—<% } %></td><td class="small"><%= a.remarks || '' %></td></tr>
+    <% }); %></tbody></table>
+  <% var open = issues.filter(function (i) { return i.status === 'open'; }); %>
+  <% if (open.length) { %><p class="small"><b>Unresolved compliance issues:</b> <%= open.map(function (i) { return i.description; }).join('; ') %></p><% } %>
+  <p class="small" style="margin-top:.8rem"><i>Note: Release of credentials, e.g. diploma, TOR, honorable dismissal, certification (GWA, CAV, COG) is subject only to clearance on property and financial accountabilities with the College.</i></p>
+  <% if (cert) { %>
+  <div class="qrbox" style="margin-top:1rem"><img src="<%= qr %>" alt="QR verification code" style="width:130px;height:130px">
+    <div class="small"><b>Verification</b><br>Scan to check whether this clearance is valid, expired, revoked or already used.<br><%= verifyUrl %><br>Status when printed: <b><%= certStatus.toUpperCase() %></b> · valid until <%= fmt(cert.expires_at) %></div></div>
+  <% } %>
+  <p class="small muted" style="margin-top:1rem">Digital form · Rev. 2 layout · Printed <%= fmt(new Date()) %></p>
+</article>
+<script src="/js/app.js"></script>
+</body></html>

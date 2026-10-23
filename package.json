@@ -1,0 +1,26 @@
+{
+  "name": "teamrene-digital-clearance",
+  "version": "1.0.0",
+  "description": "CSPC Digital Clearance Management System (CCIT 106)",
+  "license": "MIT",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "setup": "node database/setup.js",
+    "test": "node --test",
+    "rename-samples": "node database/rename_samples.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "mysql2": "^3.11.0",
+    "pdf-parse": "1.1.1",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

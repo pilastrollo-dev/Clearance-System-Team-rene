@@ -1,0 +1,17 @@
+<%- include('../partials/head', { title }) %>
+<section class="panel" style="max-width:640px">
+  <p><a href="/admin/academics">&larr; Back to academics</a></p>
+  <h1>Edit subject</h1>
+  <% if (Object.keys(errors).length) { %><div class="errors" role="alert">Nothing was saved. Fix the highlighted fields.</div><% } %>
+  <form method="POST" action="/admin/academics/subjects/<%= subject.id %>" novalidate><input type="hidden" name="_csrf" value="<%= csrf %>">
+    <%- include('../partials/input', { name: 'code', label: 'Code', value: old.code, E: errors, required: true, maxlength: 20 }) %>
+    <%- include('../partials/input', { name: 'title', label: 'Title', value: old.title, E: errors, required: true, maxlength: 120 }) %>
+    <p style="margin-top:1rem"><button class="btn" type="submit">Save changes</button> <a class="btn btn-ghost" href="/admin/academics">Cancel</a></p>
+  </form>
+  <p class="muted small">Used in <b><%= usage.enrollments %></b> enrollment(s), <b><%= usage.assignments %></b> teaching assignment(s) and <b><%= usage.approvals %></b> clearance approval(s). Fixing a typo here updates the lists; clearances already created keep the code they were created with.</p>
+  <% if (Number(usage.enrollments) + Number(usage.assignments) + Number(usage.approvals) === 0) { %>
+    <form method="POST" action="/admin/academics/subjects/<%= subject.id %>/delete" data-confirm="Delete subject <%= subject.code %>? This cannot be undone."><input type="hidden" name="_csrf" value="<%= csrf %>">
+      <button class="btn btn-danger btn-sm" type="submit">Delete this subject</button></form>
+  <% } else { %><p class="muted small">It cannot be deleted because it is already in use.</p><% } %>
+</section>
+<%- include('../partials/foot') %>

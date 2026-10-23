@@ -1,0 +1,37 @@
+<%- include('../partials/head', { title }) %>
+<section class="panel">
+  <div class="row"><h1><%= profile.given_name %> <%= profile.family_name %></h1>
+    <% if (openId) { %><a class="btn" href="/student/clearances/<%= openId %>">Open my clearance</a><% } else { %><a class="btn" href="/student/clearances/new">+ New clearance</a><% } %></div>
+  <dl class="kv">
+    <dt>Student no.</dt><dd><%= profile.student_no || '—' %></dd>
+    <dt>Program</dt><dd><%= profile.program_code || '—' %> · year <%= profile.year_level || '—' %> · section <%= profile.section_label || '—' %></dd>
+    <dt>College</dt><dd><%= profile.college || '—' %></dd>
+    <dt>Email</dt><dd><%= profile.email %> <span class="badge b-<%= profile.email_status %>"><%= profile.email_status === 'verified' ? 'Mailbox verified' : 'Address not verified' %></span></dd>
+  </dl>
+</section>
+
+<section class="panel">
+  <h2>My subjects and instructors · <%= term %></h2>
+  <% if (!enrollments.length) { %><p class="empty">You are not enrolled in any subject yet. Ask the administrator to enroll you; your instructors are taken from your enrollment.</p>
+  <% } else { %>
+  <div class="table-wrap"><table><caption class="sr-only">Enrolled subjects</caption>
+    <thead><tr><th>Subject</th><th>Section</th><th>Instructor</th></tr></thead><tbody>
+    <% enrollments.forEach(function (e) { %><tr><td><b><%= e.subject_code %></b><br><small class="muted"><%= e.title %></small></td><td><%= e.section_label %></td>
+      <td><%= e.instructors || 'No instructor assigned yet' %></td></tr><% }); %>
+  </tbody></table></div><% } %>
+</section>
+
+<section class="panel">
+  <h2>Clearance history</h2>
+  <% if (!list.length) { %><p class="empty">No clearance yet. Press “New clearance” to start.</p><% } else { %>
+  <div class="table-wrap"><table><caption class="sr-only">Your clearance requests</caption>
+    <thead><tr><th>Reference</th><th>Purpose</th><th>Term</th><th>Progress</th><th>Deadline</th><th>Status</th><th></th></tr></thead><tbody>
+    <% list.forEach(function (c) { var done = Number(c.done || 0), total = Number(c.total || 0); %>
+      <tr><td><b><%= c.reference_no %></b><br><small class="muted"><%= fmt(c.created_at) %></small></td><td><%= c.purpose %></td><td><%= c.semester %> <%= c.academic_year %></td>
+        <td style="min-width:140px"><div class="bar" role="progressbar" aria-valuenow="<%= done %>" aria-valuemin="0" aria-valuemax="<%= total %>"><i style="width:<%= total ? Math.round(done / total * 100) : 0 %>%"></i></div><small><%= done %> of <%= total %> cleared</small></td>
+        <td class="small"><%= c.deadline_at ? fmt(c.deadline_at) : '—' %></td>
+        <td><span class="badge b-<%= c.status %>"><%= c.status === 'in_progress' ? 'In progress' : c.status === 'completed' ? 'Completed' : 'Cancelled' %></span></td>
+        <td><a class="btn btn-ghost btn-sm" href="/student/clearances/<%= c.id %>">Open</a></td></tr>
+    <% }); %></tbody></table></div><% } %>
+</section>
+<%- include('../partials/foot') %>

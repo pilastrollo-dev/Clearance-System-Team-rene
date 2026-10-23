@@ -1,0 +1,22 @@
+<%- include('../partials/head', { title }) %>
+<section class="panel">
+  <p><a href="/admin/users">&larr; Back to users</a></p>
+  <h1>Teaching assignments · <%= person.given_name %> <%= person.family_name %></h1>
+  <p class="muted"><%= currentTerm ? currentTerm.label : 'No current term' %></p>
+  <% if (!items.length) { %><p class="empty">No assignments yet. This instructor will receive no clearance requests until subjects and sections are assigned.</p><% } else { %>
+  <div class="table-wrap"><table><caption class="sr-only">Assignments</caption><thead><tr><th>Subject</th><th>Section</th><th>Students</th><th></th></tr></thead><tbody>
+    <% items.forEach(function (i) { %><tr><td><b><%= i.subject_code %></b> <small class="muted"><%= i.title %></small></td><td><%= i.section_label %></td><td><%= i.students %></td>
+      <td><form class="inline" method="POST" action="/admin/users/<%= person.id %>/assignments/<%= i.id %>/remove" data-confirm="Remove this assignment?"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" type="submit">Remove</button></form></td></tr><% }); %></tbody></table></div><% } %>
+</section>
+<section class="panel">
+  <h2>Assign a subject and section</h2>
+  <% if (errors._form) { %><div class="errors" role="alert"><%= errors._form %></div><% } %>
+  <form method="POST" action="/admin/users/<%= person.id %>/assignments" novalidate><input type="hidden" name="_csrf" value="<%= csrf %>">
+    <div class="cols">
+      <%- include('../partials/select', { name: 'subject_id', label: 'Subject', value: old.subject_id, E: errors, options: subjects.map(function (s) { return { value: s.id, label: s.code + ' — ' + s.title }; }) }) %>
+      <%- include('../partials/select', { name: 'section_id', label: 'Section', value: old.section_id, E: errors, options: sections.map(function (s) { return { value: s.id, label: s.label }; }) }) %>
+    </div>
+    <p><button class="btn" type="submit">Assign</button></p>
+  </form>
+</section>
+<%- include('../partials/foot') %>

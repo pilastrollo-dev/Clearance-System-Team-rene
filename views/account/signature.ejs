@@ -1,0 +1,23 @@
+<%- include('../partials/head', { title }) %>
+<section class="panel" style="max-width:700px">
+  <h1>My signature</h1>
+  <p class="muted">This image is printed on the clearance forms you sign. It does <b>not</b> sign anything by itself: you still confirm and re-enter your password every time. Changing it later never alters clearances you already signed.</p>
+  <% if (error) { %><div class="errors" role="alert"><%= error %></div><% } %>
+  <% if (current) { %>
+    <h2>Current signature</h2>
+    <img src="<%= current %>" alt="Your saved signature" style="max-height:90px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:.3rem">
+    <form method="POST" action="/account/signature" data-confirm="Remove your signature image?" style="margin-top:.6rem"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="remove" value="1"><button class="btn btn-ghost btn-sm" type="submit">Remove</button></form>
+  <% } else { %><p class="empty" style="padding:.6rem 0">No signature image saved yet.</p><% } %>
+
+  <h2 style="margin-top:1.2rem"><%= current ? 'Replace it' : 'Add your signature' %></h2>
+  <form method="POST" action="/account/signature" id="sig-form" novalidate><input type="hidden" name="_csrf" value="<%= csrf %>">
+    <input type="hidden" name="image" id="sig-image">
+    <p class="small muted" style="margin:.2rem 0">Draw with your mouse, finger or stylus:</p>
+    <canvas id="sigpad" width="600" height="200" aria-label="Signature drawing area" style="width:100%;max-width:600px;height:auto;aspect-ratio:3/1;border:2px dashed #9fb4dc;border-radius:10px;background:#fff;touch-action:none"></canvas>
+    <p><button class="btn btn-ghost btn-sm" type="button" id="sig-clear">Clear</button></p>
+    <div class="field"><label for="sig-file">…or upload a picture of your signature (PNG or JPEG)</label><input type="file" id="sig-file" accept="image/png,image/jpeg"></div>
+    <p id="sig-msg" class="field-error" role="alert" hidden></p>
+    <p style="margin-top:1rem"><button class="btn" type="submit">Save signature</button></p>
+  </form>
+</section>
+<%- include('../partials/foot') %>

@@ -1,0 +1,44 @@
+<%- include('../partials/head', { title }) %>
+<% var pick = function (k) { return { E: form === k ? errors : {}, O: form === k ? old : {} }; }; %>
+<section class="panel">
+  <h1>Academic terms</h1>
+  <div class="table-wrap"><table><caption class="sr-only">Terms</caption><thead><tr><th>Term</th><th>Status</th><th></th></tr></thead><tbody>
+    <% terms.forEach(function (t) { %><tr><td><%= t.label %></td><td><%= t.is_current ? 'Current' : '' %></td><td>
+      <% if (!t.is_current) { %><form class="inline" method="POST" action="/admin/academics/terms/<%= t.id %>/current" data-confirm="Make this the current term? New clearances will use it."><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" type="submit">Make current</button></form><% } %></td></tr><% }); %></tbody></table></div>
+  <% var p = pick('term'); %>
+  <form method="POST" action="/admin/academics/terms" novalidate class="cols" style="align-items:end;margin-top:1rem"><input type="hidden" name="_csrf" value="<%= csrf %>">
+    <%- include('../partials/input', { name: 'academic_year', label: 'Academic year', value: p.O.academic_year, E: p.E, placeholder: '2026-2027', maxlength: 9 }) %>
+    <%- include('../partials/select', { name: 'semester', label: 'Semester', value: p.O.semester, E: p.E, options: [{ value: '1st Sem', label: '1st Sem' }, { value: '2nd Sem', label: '2nd Sem' }, { value: 'Summer', label: 'Summer' }] }) %>
+    <div class="field"><button class="btn" type="submit">Add term</button></div></form>
+</section>
+<section class="panel">
+  <h2>Programs and sections</h2>
+  <div class="table-wrap"><table><caption class="sr-only">Programs</caption><thead><tr><th>Code</th><th>Program</th><th>College</th><th>Sections</th></tr></thead><tbody>
+    <% programs.forEach(function (pr) { %><tr><td><b><%= pr.code %></b></td><td><%= pr.name %></td><td><%= pr.college %></td><td class="small"><%= sections.filter(function (s) { return s.program_id === pr.id; }).map(function (s) { return s.label; }).join(', ') %></td></tr><% }); %></tbody></table></div>
+  <div class="cols3">
+    <% p = pick('program'); %>
+    <form method="POST" action="/admin/academics/programs" novalidate><input type="hidden" name="_csrf" value="<%= csrf %>"><h2>Add program</h2>
+      <%- include('../partials/input', { name: 'code', label: 'Code', value: p.O.code, E: p.E, maxlength: 20, placeholder: 'BSIT' }) %>
+      <%- include('../partials/input', { name: 'name', label: 'Name', value: p.O.name, E: p.E, maxlength: 120 }) %>
+      <%- include('../partials/input', { name: 'college', label: 'College', value: p.O.college, E: p.E, maxlength: 100 }) %>
+      <p><button class="btn" type="submit">Add program</button></p></form>
+    <% p = pick('section'); %>
+    <form method="POST" action="/admin/academics/sections" novalidate><input type="hidden" name="_csrf" value="<%= csrf %>"><h2>Add section</h2>
+      <%- include('../partials/select', { name: 'program_id', label: 'Program', value: p.O.program_id, E: p.E, options: programs.map(function (x) { return { value: x.id, label: x.code }; }) }) %>
+      <%- include('../partials/select', { name: 'year_level', label: 'Year level', value: p.O.year_level, E: p.E, options: [1, 2, 3, 4, 5, 6].map(function (y) { return { value: y, label: String(y) }; }) }) %>
+      <%- include('../partials/input', { name: 'name', label: 'Section', value: p.O.name, E: p.E, maxlength: 10, placeholder: 'C' }) %>
+      <p><button class="btn" type="submit">Add section</button></p></form>
+  </div>
+</section>
+<section class="panel">
+  <div class="row"><h2>Subjects</h2><a class="btn btn-blue btn-sm" href="/admin/import">Bulk import (CSV / PDF)</a></div>
+  <div class="table-wrap"><table><caption class="sr-only">Subjects</caption><thead><tr><th>Code</th><th>Title</th><th></th></tr></thead><tbody><% subjects.forEach(function (s) { %><tr><td><b><%= s.code %></b></td><td><%= s.title %></td>
+    <td><a class="btn btn-ghost btn-sm" href="/admin/academics/subjects/<%= s.id %>/edit">Edit</a></td></tr><% }); %></tbody></table></div>
+  <% p = pick('subject'); %>
+  <form method="POST" action="/admin/academics/subjects" novalidate class="cols" style="align-items:end"><input type="hidden" name="_csrf" value="<%= csrf %>">
+    <%- include('../partials/input', { name: 'code', label: 'Code', value: p.O.code, E: p.E, maxlength: 20, placeholder: 'CCIT 106' }) %>
+    <%- include('../partials/input', { name: 'title', label: 'Title', value: p.O.title, E: p.E, maxlength: 120 }) %>
+    <div class="field"><button class="btn" type="submit">Add subject</button></div></form>
+  <p class="muted small">Enroll students from <a href="/admin/users?role=student">Users → Subjects</a> and assign instructors from <a href="/admin/users?role=instructor">Users → Teaching</a>.</p>
+</section>
+<%- include('../partials/foot') %>

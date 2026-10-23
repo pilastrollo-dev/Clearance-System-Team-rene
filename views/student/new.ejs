@@ -1,0 +1,27 @@
+<%- include('../partials/head', { title }) %>
+<section class="panel">
+  <h1>New clearance request</h1>
+  <% if (errors._form) { %><div class="errors" role="alert"><%= errors._form %></div><% } %>
+  <form method="POST" action="/student/clearances" novalidate data-draft="clearance" data-fresh="<%= Object.keys(errors).length ? '0' : '1' %>">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <fieldset class="field" style="border:0;padding:0;margin:0">
+      <legend style="font-weight:600;color:var(--navy)">Purpose of clearance <span class="req" aria-hidden="true">*</span></legend>
+      <% purposes.forEach(function (p) { %>
+        <label style="display:flex;gap:.5rem;align-items:flex-start;font-weight:600;margin:.5rem 0 0">
+          <input type="radio" name="purpose_id" value="<%= p.id %>" <%= String(old.purpose_id) === String(p.id) ? 'checked' : '' %> required>
+          <span><%= p.name %><% if (byPurpose[p.id]) { %><small class="muted" style="display:block;font-weight:400">Signs: <%= byPurpose[p.id].map(function (s) { return s.name; }).join(' · ') %><%= p.instructor_stage != null ? ' · your instructors' : '' %></small><% } %></span>
+        </label>
+      <% }); %>
+      <% if (errors.purpose_id) { %><p class="field-error" role="alert"><%= errors.purpose_id %></p><% } %>
+    </fieldset>
+    <%- include('../partials/input', { name: 'purpose_other', label: 'Explanation (required for “Others”)', value: old.purpose_other, E: errors, maxlength: 120 }) %>
+    <p style="margin-top:1rem"><button class="btn" type="submit">Submit clearance request</button> <a class="btn btn-ghost" href="/student">Cancel</a></p>
+  </form>
+</section>
+<section class="panel">
+  <h2>Your instructors (from your enrollment)</h2>
+  <% if (!enrollments.length) { %><p class="muted">You are not enrolled in any subject this term, so instructor signatures cannot be generated. Ask the administrator to enroll you.</p>
+  <% } else { %><ul><% enrollments.forEach(function (e) { %><li><b><%= e.subject_code %></b> (<%= e.section_label %>) — <%= e.instructors || 'no instructor assigned yet' %></li><% }); %></ul><% } %>
+  <p class="muted small">Offices sign in stages set by the administrator. By default the College Registrar signs only after everyone before, and the Concerned Dean signs last.</p>
+</section>
+<%- include('../partials/foot') %>

@@ -1,0 +1,30 @@
+<%- include('../partials/head', { title }) %>
+<% var tabs = [['action', 'Needs my action'], ['waiting', 'Waiting for earlier stage'], ['on_hold', 'On hold'], ['overdue', 'Overdue'], ['history', 'My approvals'], ['all', 'All']]; %>
+<% if (assignments.length) { %>
+<section class="panel"><h2>My teaching assignments · <%= term %></h2>
+  <div class="table-wrap"><table><caption class="sr-only">Assigned subjects</caption><thead><tr><th>Subject</th><th>Section</th><th>Year</th><th>Students</th></tr></thead><tbody>
+  <% assignments.forEach(function (a) { %><tr><td><b><%= a.subject_code %></b> <small class="muted"><%= a.title %></small></td><td><%= a.section_label %></td><td><%= a.year_level %></td><td><%= a.students %></td></tr><% }); %></tbody></table></div></section>
+<% } %>
+<section class="panel">
+  <h1><%= isDept ? 'Escalated instructor approvals' : 'Clearance requests' %></h1>
+  <div class="tabs" role="navigation" aria-label="Filter by status">
+    <% tabs.forEach(function (t) { %><a href="/staff?view=<%= t[0] %>" <%- f.view === t[0] ? 'aria-current="page"' : '' %>><%= t[1] %></a><% }); %>
+  </div>
+  <form class="filters" method="GET" action="/staff"><input type="hidden" name="view" value="<%= f.view %>">
+    <%- include('../partials/input', { name: 'q', label: 'Search student or request no.', value: f.q, maxlength: 60 }) %>
+    <% if (subjects.length) { %><%- include('../partials/select', { name: 'subject_id', label: 'Subject', value: f.subject_id || '', options: subjects.map(function (s) { return { value: s.id, label: s.label }; }), blank: 'All subjects' }) %><% } %>
+    <%- include('../partials/select', { name: 'section_id', label: 'Section', value: f.section_id || '', options: sections.map(function (s) { return { value: s.id, label: s.label }; }), blank: 'All sections' }) %>
+    <div class="field"><button class="btn btn-blue" type="submit">Filter</button></div>
+  </form>
+  <% if (!rows.length) { %><p class="empty">Nothing here. You are notified when a student's request reaches you.</p><% } else { %>
+  <div class="table-wrap"><table><caption class="sr-only">Requests assigned to you</caption>
+    <thead><tr><th>Student</th><th>Signing as</th><th>Purpose</th><th>Submitted</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody>
+    <% rows.forEach(function (a) { %>
+      <tr><td><b><%= a.given_name %> <%= a.family_name %></b><br><small class="muted"><%= a.student_no %> · <%= a.section_label || '' %></small></td>
+        <td><%= a.label %></td><td><%= a.purpose %><br><small class="muted"><%= a.reference_no %></small></td><td class="small"><%= fmt(a.submitted_at) %></td>
+        <td class="small"><% if (a.status !== 'cleared' && a.due_at) { %><%= fmt(a.due_at) %><% if (a.overdue) { %><br><span class="badge b-overdue">Overdue</span><% } %><% } else { %>—<% } %></td>
+        <td><span class="badge b-<%= a.status %>"><%= a.status === 'pending' ? 'Pending' : a.status === 'on_hold' ? 'On Hold' : 'Cleared ✓' %></span><% if (!a.eligible_at && a.status !== 'cleared') { %><br><small class="muted">not started</small><% } %></td>
+        <td><a class="btn <%= a.status === 'cleared' ? 'btn-ghost' : '' %> btn-sm" href="/staff/approvals/<%= a.id %>"><%= a.status === 'cleared' ? 'View' : 'Review' %></a></td></tr>
+    <% }); %></tbody></table></div><% } %>
+</section>
+<%- include('../partials/foot') %>
