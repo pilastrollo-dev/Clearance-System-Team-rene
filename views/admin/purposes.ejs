@@ -1,7 +1,7 @@
 <%- include('../partials/head', { title }) %>
 <section class="panel">
   <h1>Clearance purposes and required signatories</h1>
-  <p class="muted">Enter a <b>stage number</b> for every office that must sign this purpose (blank = not required). An approval can only be signed after every approval in a lower stage is cleared. Default: offices and instructors = 1, Registrar = 2, Dean = 3. Changes apply to new requests only.</p>
+  <p class="muted">Enter a <b>stage number</b> for every office that must sign this purpose (blank = not required). An approval can only be signed after every approval in a lower stage is cleared. Default: offices and instructors = 1, Dean = 2, Registrar = 3 . Changes apply to new requests only.</p>
   <% if (errors.signatories) { %><div class="errors" role="alert"><%= errors.signatories %></div><% } %>
   <% purposes.forEach(function (p) { var mine = errPurpose === p.id; var E = mine ? errors : {}; %>
   <details <%= (mine || purposes.length === 1) ? 'open' : '' %> style="border:1px solid var(--line);border-radius:12px;padding:.6rem 1rem;margin:.6rem 0">
