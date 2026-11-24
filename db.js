@@ -16,8 +16,8 @@ const dbConfig = {
   queueLimit: 0,
 };
 
-// Enable TLS when deployed to production
-if (isProduction) {
+// Enable TLS in production or when explicitly testing TiDB
+if (isProduction || process.env.DB_SSL === 'true') {
   dbConfig.ssl = {
     rejectUnauthorized: true,
     ...(process.env.DB_SSL_CA
